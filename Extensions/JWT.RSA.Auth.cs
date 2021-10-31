@@ -10,29 +10,26 @@ namespace JWT.Extensions
 {
     public static class JWTRSAAuth 
     {
-        public static AuthenticationBuilder AddJWTRSAAuth(this IServiceCollection collection, IConfiguration Configuration)
+        public static AuthenticationBuilder AddJWTRSAAuth(this IServiceCollection services, IConfiguration Configuration)
         {
-            return collection.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            return services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options => {
-                RsaSecurityKey key;
-                //using(RSA rsa = RSA.Create())
-                //{
+
                 RSA rsa = RSA.Create();
-                  rsa.ImportRSAPublicKey(Convert.FromBase64String(Configuration["JWT:Keys:Public"]), out int _);
-                  key = new RsaSecurityKey(rsa){CryptoProviderFactory = new CryptoProviderFactory(){ CacheSignatureProviders = false }};
-                //}
+
+                rsa.ImportRSAPublicKey(Convert.FromBase64String(Configuration["JWT:Keys:Public"]), out int _);
 
                 options.TokenValidationParameters = new TokenValidationParameters()
                   {
-                      IssuerSigningKey = key,
-                      ValidAudience = "jwt-test",
-                      ValidIssuer = "jwt-test",
-                      RequireSignedTokens = true,
-                      RequireExpirationTime = true,
+                      ValidateIssuerSigningKey = true,
+                      ValidateAudience = true,
+                      ValidateIssuer = true,
                       ValidateLifetime = true,
+                      IssuerSigningKey = new RsaSecurityKey(rsa),
+                      ValidAudience = "jwt-test",
+                      ValidIssuer = "jwt-test"
                   };
-            });
-         
+            });       
         }
     }
 }
